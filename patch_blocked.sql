@@ -1,4 +1,9 @@
--- 1. Adicionar coluna is_blocked à tabela profiles
+-- ============================================================
+-- Correção de Permissão para Administrador Suspender/Ativar Contas
+-- Execute este script no SQL Editor do seu Supabase Dashboard.
+-- ============================================================
+
+-- 1. Garantir que a coluna is_blocked existe na tabela profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_blocked boolean NOT NULL DEFAULT false;
 
 -- 2. Atualizar a constraint de status da tabela products para permitir 'inactive'
@@ -16,27 +21,83 @@ BEGIN
     END LOOP;
 END $$;
 
-ALTER TABLE public.products ADD CONSTRAINT products_status_check CHECK (status IN ('pending_review', 'active', 'rejected', 'inactive'));
+ALTER TABLE public.products ADD CONSTRAINT products_status_check 
+  CHECK (status IN ('pending_review', 'active', 'rejected', 'inactive'));
 
--- 3. RLS para proteger is_blocked
--- Apenas super admin pode alterar is_blocked de outros admins.
--- Utilizadores normais não podem alterar is_blocked.
+-- 3. Atualizar a função is_admin() para garantir o reconhecimento dos administradores
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = auth.uid()
+      AND (
+        is_super_admin = true
+        OR email IN ('walsonxavier28@gmail.com', 'kristendossantos17@gmail.com')
+      )
+  );
+$$;
 
+-- 4. RLS: Permitir que Administradores atualizem qualquer perfil (incluindo is_blocked)
+DROP POLICY IF EXISTS "profiles_update_admin" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_update_blocked" ON public.profiles;
-CREATE POLICY "profiles_update_blocked"
+
+CREATE POLICY "profiles_update_admin"
   ON public.profiles FOR UPDATE
   USING (
-    -- Só os admins podem invocar atualizações (aqui assumimos que a UI ou função confere is_admin)
-    -- Para efeitos práticos na UI e Edge Functions, dependemos de que public.is_admin() retorne true.
-    -- (Isto pressupõe a existência do public.is_admin() criado em passos anteriores)
-    true
+    public.is_admin()
   )
   WITH CHECK (
-    -- Se quem está a ser alterado for um super_admin, o utilizador autenticado também TEM de ser super admin
-    (NOT is_super_admin) OR (
-      EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE id = auth.uid() AND is_super_admin = true
-      )
-    )
+    public.is_admin()
   );
+
+-- 5. Criar Função RPC Segura para o Admin Suspender/Ativar Contas (bypassa RLS com segurança)
+CREATE OR REPLACE FUNCTION public.admin_toggle_block(target_user_id uuid, block_status boolean)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  caller_is_admin boolean;
+  target_is_super_admin boolean;
+BEGIN
+  -- Verificar se quem está a chamar é administrador
+  caller_is_admin := public.is_admin();
+  IF NOT caller_is_admin THEN
+    RAISE EXCEPTION 'Acesso negado: Apenas administradores podem suspender ou ativar contas.';
+  END IF;
+
+  -- Impedir suspender o próprio administrador
+  IF target_user_id = auth.uid() THEN
+    RAISE EXCEPTION 'Não é permitido suspender a sua própria conta de administrador.';
+  END IF;
+
+  -- Se o alvo for super_admin, apenas super_admin pode alterar
+  SELECT is_super_admin INTO target_is_super_admin FROM public.profiles WHERE id = target_user_id;
+  IF target_is_super_admin = true AND (SELECT is_super_admin FROM public.profiles WHERE id = auth.uid()) != true THEN
+    RAISE EXCEPTION 'Apenas um Super Administrador pode alterar o estado de outro Administrador.';
+  END IF;
+
+  -- Atualizar o perfil do utilizador
+  UPDATE public.profiles
+  SET is_blocked = block_status
+  WHERE id = target_user_id;
+
+  -- Se foi suspenso, desativar temporariamente os produtos ativos do produtor
+  IF block_status = true THEN
+    UPDATE public.products
+    SET status = 'inactive'
+    WHERE producer_id = target_user_id AND status = 'active';
+  END IF;
+
+  RETURN json_build_object('success', true, 'is_blocked', block_status);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_toggle_block(uuid, boolean) TO authenticated;

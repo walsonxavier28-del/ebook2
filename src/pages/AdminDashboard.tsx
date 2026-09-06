@@ -168,6 +168,8 @@ function AccountsPanel({ currentAdmin }: { currentAdmin: Profile }) {
   const [accounts, setAccounts] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
   useEffect(() => {
     load();
   }, []);
@@ -180,9 +182,40 @@ function AccountsPanel({ currentAdmin }: { currentAdmin: Profile }) {
   }
 
   async function toggleBlock(id: string, currentlyBlocked: boolean) {
-    if (!window.confirm(`Tem a certeza que deseja ${currentlyBlocked ? "ativar" : "suspender"} esta conta?`)) return;
-    await supabase.from("profiles").update({ is_blocked: !currentlyBlocked }).eq("id", id);
-    load();
+    const actionLabel = currentlyBlocked ? "ativar" : "suspender";
+    if (!window.confirm(`Tem a certeza que deseja ${actionLabel} esta conta?`)) return;
+
+    setActionLoadingId(id);
+    try {
+      // 1. Tenta chamar a RPC admin_toggle_block (mais segura e com bypass de RLS)
+      const { error: rpcError } = await supabase.rpc("admin_toggle_block", {
+        target_user_id: id,
+        block_status: !currentlyBlocked,
+      });
+
+      if (rpcError) {
+        // 2. Se a RPC não existir ainda, tenta atualização direta
+        const { error: directError } = await supabase
+          .from("profiles")
+          .update({ is_blocked: !currentlyBlocked })
+          .eq("id", id);
+
+        if (directError) {
+          throw new Error(
+            directError.message || rpcError.message || "Permissão negada pelo banco de dados."
+          );
+        }
+      }
+
+      await load();
+    } catch (err: any) {
+      alert(
+        `Não foi possível ${actionLabel} a conta.\nMotivo: ${err?.message || "Erro de permissão no backend."}\n\nExecute o script 'patch_blocked.sql' no Editor SQL do seu Supabase para conceder permissão ao administrador.`
+      );
+      console.error("Erro ao suspender/ativar conta:", err);
+    } finally {
+      setActionLoadingId(null);
+    }
   }
 
   return (
@@ -203,7 +236,7 @@ function AccountsPanel({ currentAdmin }: { currentAdmin: Profile }) {
           <tbody>
             {loading ? (
               <tr>
-                <td className="px-4 py-6 text-white/50" colSpan={4}>
+                <td className="px-4 py-6 text-white/50 text-center" colSpan={5}>
                   A carregar...
                 </td>
               </tr>
@@ -235,14 +268,19 @@ function AccountsPanel({ currentAdmin }: { currentAdmin: Profile }) {
                     {/* Não permitir que admin normal bloqueie super admin, nem bloquear a si próprio */}
                     {acc.id !== currentAdmin.id && (!acc.is_super_admin || currentAdmin.is_super_admin) && (
                       <button
+                        disabled={actionLoadingId === acc.id}
                         onClick={() => toggleBlock(acc.id, acc.is_blocked)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
                           acc.is_blocked
                             ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
                             : "bg-red-500/15 text-red-300 hover:bg-red-500/25"
                         }`}
                       >
-                        {acc.is_blocked ? "Ativar" : "Suspender"}
+                        {actionLoadingId === acc.id
+                          ? "A processar..."
+                          : acc.is_blocked
+                          ? "Ativar"
+                          : "Suspender"}
                       </button>
                     )}
                   </td>
