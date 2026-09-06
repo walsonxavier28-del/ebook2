@@ -188,8 +188,6 @@ export default function Auth() {
 
       {/* Lado direito — Formulário */}
       <div className="flex w-full flex-col items-center justify-center px-4 py-12 lg:w-1/2">
-        <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-electric/20 blur-3xl lg:left-3/4" />
-
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-8">
             <AnimatedLogo />

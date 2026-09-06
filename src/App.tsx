@@ -13,29 +13,26 @@ import Marketplace from "./pages/Marketplace";
 import ProfileSettings from "./pages/ProfileSettings";
 import MyPurchases from "./pages/MyPurchases";
 
-import { BookOpen, Smartphone, ShieldCheck, TrendingUp, ArrowRight, MessageCircle, Sparkles } from "lucide-react";
+import { BookOpen, Smartphone, ShieldCheck, TrendingUp, ArrowRight, MessageCircle } from "lucide-react";
 
 function Landing() {
   return (
     <div className="min-h-screen text-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 px-4">
-        {/* Subtle background glow, no harsh neon */}
-        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-electric/10 rounded-full blur-3xl -z-10" />
-
+      <section className="relative pt-12 pb-20 px-4">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
           {/* Official Logo Display */}
           <div className="mb-6">
             <AnimatedLogo size="lg" showTagline={false} />
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-electric/30 bg-electric/10 px-4 py-1.5 text-xs font-semibold text-electric-soft mb-6">
-            <Sparkles size={14} />
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/25 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300 mb-6">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
             Marketplace de E-books em Moçambique
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-3xl leading-tight">
-            Conhecimento que <span className="bg-gradient-to-r from-white via-electric-soft to-blue-200 bg-clip-text text-transparent">transforma</span> a sua vida
+            Conhecimento que <span className="text-electric-soft">transforma</span> a sua vida
           </h1>
 
           <p className="mt-6 max-w-2xl text-base sm:text-lg text-white/70 leading-relaxed font-normal">
