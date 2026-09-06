@@ -6,11 +6,11 @@ export default {
       colors: {
         night: "#0B0F19",
         "night-soft": "#111729",
-        electric: "#3b82f6",
-        "electric-soft": "#93c5fd",
+        electric: "#2563eb",
+        "electric-soft": "#60a5fa",
       },
       boxShadow: {
-        glow: "0 0 60px rgba(59, 130, 246, 0.35)",
+        glow: "0 4px 20px -2px rgba(37, 99, 235, 0.25)",
       },
       fontFamily: {
         display: ["'Sora'", "sans-serif"],

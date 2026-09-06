@@ -17,8 +17,16 @@ export default function Navbar({ profile }: NavbarProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-night/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="font-display text-xl font-extrabold text-white">
-          eBook<span className="text-electric-soft">ly</span>
+        <Link to="/" className="flex items-center gap-3 font-display text-xl font-extrabold text-white">
+          <img
+            src="/logo.png"
+            alt="eBookly"
+            width={36}
+            height={36}
+            style={{ width: 36, height: 36 }}
+            className="rounded-xl object-cover shadow-sm"
+          />
+          <span>eBook<span className="text-electric-soft">ly</span></span>
         </Link>
 
         <div className="flex items-center gap-4">
