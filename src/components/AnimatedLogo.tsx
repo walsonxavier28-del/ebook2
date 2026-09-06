@@ -35,8 +35,8 @@ export default function AnimatedLogo({ size = "lg", showTagline = true }: Animat
         >
           <defs>
             <linearGradient id="eGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3D8BFF" />
-              <stop offset="100%" stopColor="#0033AA" />
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#1d4ed8" />
             </linearGradient>
           </defs>
 
@@ -60,7 +60,7 @@ export default function AnimatedLogo({ size = "lg", showTagline = true }: Animat
             <path
               d="M100 128 L160 148 L160 168 L100 178 Z"
               fill="#0B0F19"
-              stroke="#3D8BFF"
+              stroke="#60a5fa"
               strokeWidth="1"
             />
           </g>
