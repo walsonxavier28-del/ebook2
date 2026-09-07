@@ -207,7 +207,7 @@ export default function Checkout() {
       <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
         {/* Coluna Esquerda — Produto */}
         <div>
-          <div className="mb-6 flex aspect-[3/4] w-full max-w-[220px] items-center justify-center overflow-hidden rounded-xl bg-black/30 p-3 shadow-glow sm:max-w-sm md:mx-auto">
+          <div className="mb-6 flex aspect-[3/4] w-full max-w-[175px] items-center justify-center overflow-hidden rounded-xl bg-black/30 p-2 shadow-glow sm:max-w-sm md:mx-auto">
             <img
               src={product.cover_image_url}
               alt={product.title}

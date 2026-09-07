@@ -48,7 +48,7 @@ function Landing({ profile }: { profile: Profile | null }) {
               className="flex items-center gap-2 rounded-full bg-electric px-7 py-3.5 text-sm font-semibold text-white shadow-glow transition hover:bg-electric-soft"
             >
               <ArrowRight size={18} />
-              Criar conta / Entrar
+              Começar a vender
             </Link>
             <a
               href="#catalogo"
@@ -214,7 +214,7 @@ function PainelRoute({ profile }: { profile: Profile | null }) {
         type="button"
         aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
         onClick={() => setMenuOpen((open) => !open)}
-        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-electric text-white shadow-glow md:hidden"
+        className="fixed left-4 top-20 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-electric text-white shadow-glow md:hidden"
       >
         {menuOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
