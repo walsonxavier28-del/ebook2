@@ -21,9 +21,7 @@ function slugify(text: string) {
 }
 
 function getCheckoutUrl(slug: string) {
-  const configuredSiteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
-  const siteUrl = configuredSiteUrl.replace(/\/+$/, "");
-  return `${siteUrl}/checkout/${encodeURIComponent(slug)}`;
+  return new URL(`/checkout/${encodeURIComponent(slug)}`, window.location.origin).toString();
 }
 
 export default function ProducerDashboard({ profile, activeTab }: ProducerDashboardProps) {

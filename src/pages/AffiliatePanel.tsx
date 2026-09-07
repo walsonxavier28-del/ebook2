@@ -89,10 +89,10 @@ export default function AffiliatePanel({ profile }: { profile: Profile }) {
     setTransactions((data as Transaction[]) || []);
   }
 
-  const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "");
-
   function getAffiliateLink(slug: string) {
-    return `${siteUrl}/checkout/${encodeURIComponent(slug)}?ref=${encodeURIComponent(profile.affiliate_code || "")}`;
+    const link = new URL(`/checkout/${encodeURIComponent(slug)}`, window.location.origin);
+    link.searchParams.set("ref", profile.affiliate_code || "");
+    return link.toString();
   }
 
   async function updateAffiliation(id: string, status: "approved" | "rejected") {

@@ -169,7 +169,10 @@ export default function Checkout() {
   if (notFound || !product) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4 text-center">
-        <p className="text-white/70">Este produto não está disponível ou já não existe.</p>
+        <div>
+          <p className="text-white/70">Este produto ainda não está disponível para venda.</p>
+          <p className="mt-2 text-sm text-white/40">O checkout fica disponível depois da validação do produto.</p>
+        </div>
       </div>
     );
   }
