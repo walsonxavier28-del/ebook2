@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { supabase, isAdminEmail, Profile } from "./lib/supabase";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -23,7 +23,9 @@ function Landing({ profile }: { profile: Profile | null }) {
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
           {/* Official Logo Display */}
           <div className="mb-6">
-            <AnimatedLogo size="lg" showTagline={false} />
+            <Link to="/auth" aria-label="Abrir cadastro e login">
+              <AnimatedLogo size="lg" showTagline={false} />
+            </Link>
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/25 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300 mb-6">
@@ -41,19 +43,19 @@ function Landing({ profile }: { profile: Profile | null }) {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/auth"
+              className="flex items-center gap-2 rounded-full bg-electric px-7 py-3.5 text-sm font-semibold text-white shadow-glow transition hover:bg-electric-soft"
+            >
+              <ArrowRight size={18} />
+              Criar conta / Entrar
+            </Link>
             <a
               href="#catalogo"
-              className="flex items-center gap-2 rounded-full bg-electric px-7 py-3.5 text-sm font-semibold text-white shadow-glow transition hover:bg-electric-soft"
+              className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 hover:border-white/25"
             >
               <BookOpen size={18} />
               Explorar Catálogo
-            </a>
-            <a
-              href="/auth"
-              className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 hover:border-white/25"
-            >
-              Começar a Vender
-              <ArrowRight size={16} />
             </a>
           </div>
 

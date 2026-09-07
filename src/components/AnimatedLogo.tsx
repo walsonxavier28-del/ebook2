@@ -15,7 +15,7 @@ export default function AnimatedLogo({ size = "lg", showTagline = true }: Animat
           width={pixelSize}
           height={pixelSize}
           style={{ width: pixelSize, height: pixelSize }}
-          className="relative rounded-2xl md:rounded-3xl object-cover shadow-md animate-float transition-transform duration-300 group-hover:scale-105"
+          className="relative rounded-2xl object-cover shadow-md md:rounded-3xl md:animate-float transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 
