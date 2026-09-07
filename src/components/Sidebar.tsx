@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, BookPlus, Library, ShieldCheck, Users, Users2, Wallet, Store, Settings, ShoppingBag, CheckCircle, TrendingUp } from "lucide-react";
+import { LayoutDashboard, BookPlus, Library, ShieldCheck, Users, Users2, Wallet, Store, Settings, ShoppingBag, CheckCircle } from "lucide-react";
 
 interface SidebarProps {
   isAdmin: boolean;
@@ -14,8 +14,7 @@ const producerTabs = [
   { id: "new-product", label: "Cadastrar Produto", icon: BookPlus },
   { id: "my-products", label: "Meus Produtos", icon: Library },
   { id: "producer-payments", label: "Validar Vendas", icon: CheckCircle },
-  { id: "producer-affiliates", label: "Meus Afiliados", icon: Users2 },
-  { id: "affiliates", label: "Painel de Afiliado", icon: TrendingUp },
+  { id: "affiliates", label: "Afiliados", icon: Users2 },
   { id: "settings", label: "Definições", icon: Settings },
 ];
 

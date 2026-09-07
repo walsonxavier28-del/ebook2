@@ -20,6 +20,12 @@ function slugify(text: string) {
   );
 }
 
+function getCheckoutUrl(slug: string) {
+  const configuredSiteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const siteUrl = configuredSiteUrl.replace(/\/+$/, "");
+  return `${siteUrl}/checkout/${encodeURIComponent(slug)}`;
+}
+
 export default function ProducerDashboard({ profile, activeTab }: ProducerDashboardProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
@@ -240,8 +246,6 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
     return <ProducerAffiliatesPanel profile={profile} products={products} />;
   }
 
-  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
-
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="font-display text-2xl font-bold text-white">Cadastrar Produto</h1>
@@ -252,7 +256,7 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
           <p className="mb-4 text-sm text-white/70">
             O produto foi enviado para análise. Assim que aprovado, este será o link oficial de vendas:
           </p>
-          <CheckoutLink url={`${siteUrl}/checkout/${createdProductSlug}`} />
+          <CheckoutLink url={getCheckoutUrl(createdProductSlug)} />
           <p className="mt-3 text-xs text-white/50">
             Este é o link que você também pode passar a afiliados, adicionando <code className="font-mono text-electric-soft">?ref=CODIGO</code> no fim.
           </p>
@@ -583,7 +587,7 @@ function ProductList({ products, loading }: { products: Product[]; loading: bool
               <p className="mb-2 text-xs text-white/50">
                 Link de checkout {p.status === "pending_review" && <span className="text-amber-400/80">(fica ativo após aprovação)</span>}
               </p>
-              <CheckoutLink url={`${siteUrl}/checkout/${p.checkout_slug}`} />
+              <CheckoutLink url={getCheckoutUrl(p.checkout_slug)} />
             </div>
           )}
         </div>

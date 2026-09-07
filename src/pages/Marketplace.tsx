@@ -97,7 +97,7 @@ export default function Marketplace({ profile }: { profile: Profile | null }) {
                 </p>
                 <div className="mt-auto pt-4 space-y-2">
                   <Link
-                    to={`/checkout/${p.checkout_slug}`}
+                    to={`/checkout/${encodeURIComponent(p.checkout_slug)}`}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-electric py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-electric-soft"
                   >
                     <ShoppingCart size={16} />
