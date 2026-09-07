@@ -15,7 +15,7 @@ import MyPurchases from "./pages/MyPurchases";
 
 import { BookOpen, Smartphone, ShieldCheck, TrendingUp, ArrowRight, MessageCircle } from "lucide-react";
 
-function Landing() {
+function Landing({ profile }: { profile: Profile | null }) {
   return (
     <div className="min-h-screen text-white">
       {/* Hero Section */}
@@ -86,7 +86,7 @@ function Landing() {
           </p>
         </div>
 
-        <Marketplace />
+        <Marketplace profile={profile} />
       </section>
 
       {/* Como Funciona */}
@@ -212,7 +212,7 @@ function PainelRoute({ profile }: { profile: Profile | null }) {
         {["product-review", "accounts", "deposits", "withdrawals"].includes(activeTab) && isAdmin ? (
           <AdminDashboard activeTab={activeTab} profile={profile} />
         ) : activeTab === "store" ? (
-          <Marketplace />
+          <Marketplace profile={profile} />
         ) : activeTab === "my-purchases" ? (
           <MyPurchases />
         ) : activeTab === "settings" ? (
@@ -293,7 +293,7 @@ export default function App() {
           <>
             <Navbar profile={profile} />
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<Landing profile={profile} />} />
               <Route path="/auth" element={profile ? <Navigate to="/painel" replace /> : <Auth />} />
               <Route path="/painel" element={<PainelRoute profile={profile} />} />
             </Routes>

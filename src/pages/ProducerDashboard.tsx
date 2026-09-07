@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Wallet, TrendingUp, BookOpen, UploadCloud, Link as LinkIcon, Copy, ArrowRight, ArrowDownCircle, Check, X, Image as ImageIcon } from "lucide-react";
-import { supabase, Product, Profile, WithdrawalRequest, Transaction } from "../lib/supabase";
+import { Wallet, TrendingUp, BookOpen, UploadCloud, Link as LinkIcon, Copy, ArrowRight, ArrowDownCircle, Check, X, Image as ImageIcon, Users } from "lucide-react";
+import { supabase, Product, Profile, WithdrawalRequest, Transaction, Affiliation } from "../lib/supabase";
 import { sendPurchaseConfirmationEmail } from "../lib/emailService";
 import { creditWalletFromPayment } from "../lib/walletService";
 
@@ -29,6 +29,7 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [commissionPercent, setCommissionPercent] = useState("20");
+  const [affiliateEnabled, setAffiliateEnabled] = useState(true);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -119,6 +120,7 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
         title,
         description,
         price: Number(price),
+        affiliate_enabled: affiliateEnabled,
         affiliate_commission_percent: Number(commissionPercent),
         cover_image_url: coverUrlData.publicUrl,
         file_url: fileUrlData.publicUrl,
@@ -135,6 +137,7 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
       setDescription("");
       setPrice("");
       setCommissionPercent("20");
+      setAffiliateEnabled(true);
       setCoverFile(null);
       setPdfFile(null);
       loadProducts();
@@ -233,6 +236,10 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
     return <ProducerPaymentsPanel profile={profile} products={products} />;
   }
 
+  if (activeTab === "producer-affiliates") {
+    return <ProducerAffiliatesPanel profile={profile} products={products} />;
+  }
+
   const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
 
   return (
@@ -278,7 +285,6 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
           <div>
             <label className="mb-1 block text-sm text-white/70">Preço (MT)</label>
             <input
-              required
               type="number"
               min="1"
               value={price}
@@ -299,6 +305,19 @@ export default function ProducerDashboard({ profile, activeTab }: ProducerDashbo
             />
           </div>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <input
+            type="checkbox"
+            checked={affiliateEnabled}
+            onChange={(e) => setAffiliateEnabled(e.target.checked)}
+            className="mt-1 h-4 w-4 accent-electric"
+          />
+          <span>
+            <span className="block text-sm font-medium text-white">Aceitar afiliados para este produto</span>
+            <span className="mt-1 block text-xs text-white/50">Afiliados poderão pedir aprovação e divulgar o link deste checkout.</span>
+          </span>
+        </label>
 
         <div className="grid grid-cols-2 gap-4">
           <FileField label="Capa (imagem)" accept="image/*" file={coverFile} onChange={setCoverFile} />
@@ -586,11 +605,9 @@ function CheckoutLink({ url }: { url: string }) {
     <div className="flex items-center gap-2">
       <div className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
         <LinkIcon size={14} className="shrink-0 text-white/40" />
-        <input
-          readOnly
-          value={url}
-          className="w-full bg-transparent font-mono text-sm text-white/70 outline-none"
-        />
+        <a href={url} className="w-full truncate font-mono text-sm text-electric-soft hover:underline" target="_blank" rel="noreferrer">
+          {url}
+        </a>
       </div>
       <button
         type="button"
@@ -785,6 +802,151 @@ function ProducerPaymentsPanel({ profile, products }: { profile: Profile; produc
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Painel: Pedidos de Afiliação (produtor) ────────────────────────────────
+
+function ProducerAffiliatesPanel({ profile, products }: { profile: Profile; products: Product[] }) {
+  const [affiliations, setAffiliations] = useState<(Affiliation & { affiliate?: Profile, product?: Product })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel("producer-affiliates")
+      .on("postgres_changes", { event: "*", schema: "public", table: "affiliations", filter: `producer_id=eq.${profile.id}` }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile.id, products]);
+
+  async function load() {
+    setLoading(true);
+    const { data: affData } = await supabase
+      .from("affiliations")
+      .select("*, affiliate:profiles(*)")
+      .eq("producer_id", profile.id)
+      .order("created_at", { ascending: false });
+
+    if (affData) {
+      const enriched = (affData as any[]).map(aff => {
+        const product = products.find(p => p.id === aff.product_id);
+        return { ...aff, product, affiliate: aff.affiliate };
+      });
+      setAffiliations(enriched);
+    } else {
+      setAffiliations([]);
+    }
+    setLoading(false);
+  }
+
+  async function handleUpdateStatus(id: string, status: "approved" | "rejected") {
+    await supabase.from("affiliations").update({ status }).eq("id", id);
+    load();
+  }
+
+  async function toggleAffiliateAccess(product: Product) {
+    await supabase
+      .from("products")
+      .update({ affiliate_enabled: !product.affiliate_enabled })
+      .eq("id", product.id)
+      .eq("producer_id", profile.id);
+  }
+
+  return (
+    <div className="space-y-6">
+      <h1 className="font-display text-2xl font-bold text-white">Meus Afiliados</h1>
+      <p className="text-sm text-white/50">
+        Escolha quais produtos podem ser promovidos e faça a gestão dos pedidos de afiliação.
+      </p>
+
+      <div className="space-y-3">
+        <h2 className="font-display text-lg font-semibold text-white">Disponibilidade para afiliados</h2>
+        {products.filter((product) => product.status === "active").length === 0 ? (
+          <p className="text-sm text-white/50">Os produtos aprovados aparecerão aqui.</p>
+        ) : (
+          products.filter((product) => product.status === "active").map((product) => (
+            <div key={product.id} className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <div>
+                <p className="font-medium text-white">{product.title}</p>
+                <p className="text-xs text-white/50">Comissão: {Number(product.affiliate_commission_percent)}%</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleAffiliateAccess(product)}
+                className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${product.affiliate_enabled ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" : "bg-white/10 text-white/50 hover:bg-white/15"}`}
+              >
+                {product.affiliate_enabled ? "Afiliados ativos" : "Afiliados desativados"}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      {loading && <p className="text-sm text-white/50">A carregar...</p>}
+      {!loading && affiliations.length === 0 && (
+        <p className="text-sm text-white/50">Ainda não recebeu pedidos de afiliação.</p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {affiliations.map((aff) => (
+          <div key={aff.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+            <div className="mb-3 flex items-start justify-between">
+              <div>
+                <p className="font-medium text-white flex items-center gap-2">
+                  <Users size={16} className="text-electric-soft" />
+                  {aff.affiliate?.full_name || "Utilizador Desconhecido"}
+                </p>
+                <p className="text-xs text-white/50">{aff.affiliate?.email}</p>
+              </div>
+              <div>
+                {aff.status === "approved" ? (
+                  <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">Aprovado</span>
+                ) : aff.status === "rejected" ? (
+                  <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-medium text-red-300">Rejeitado</span>
+                ) : (
+                  <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-300">Pendente</span>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-lg bg-black/20 p-3">
+              <p className="text-xs text-white/50">Produto solicitado:</p>
+              <p className="text-sm font-medium text-white">{aff.product?.title || "Produto Desconhecido"}</p>
+            </div>
+
+            {aff.status === "pending" && (
+              <div className="flex gap-2 border-t border-white/5 pt-4">
+                <button
+                  onClick={() => handleUpdateStatus(aff.id, "approved")}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300 transition hover:bg-emerald-500/25"
+                >
+                  <Check size={16} /> Aprovar
+                </button>
+                <button
+                  onClick={() => handleUpdateStatus(aff.id, "rejected")}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300 transition hover:bg-red-500/25"
+                >
+                  <X size={16} /> Rejeitar
+                </button>
+              </div>
+            )}
+            
+            {aff.status === "approved" && (
+              <div className="flex gap-2 border-t border-white/5 pt-4">
+                <button
+                  onClick={() => handleUpdateStatus(aff.id, "rejected")}
+                  className="flex w-full items-center justify-center gap-1 rounded-lg border border-red-500/30 bg-transparent px-3 py-2 text-sm text-red-300 transition hover:bg-red-500/10"
+                >
+                  Remover Afiliação
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,12 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+// Strip BOM (\uFEFF) and whitespace that PowerShell/Windows may inject into env vars
+function cleanEnv(val: string | undefined): string {
+  return (val ?? "").replace(/^\uFEFF/, "").trim();
+}
+
+const supabaseUrl = cleanEnv(import.meta.env.VITE_SUPABASE_URL);
+const supabaseAnonKey = cleanEnv(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY em falta. Configure o ficheiro .env.local a partir do .env.example."
-  );
+  throw new Error("VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing. Check your environment variables.");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -78,6 +81,7 @@ export interface Product {
   checkout_slug: string;
   status: "pending_review" | "active" | "rejected" | "inactive";
   rejection_reason: string | null;
+  affiliate_enabled: boolean;
   affiliate_commission_percent: number;
   created_at: string;
 }
@@ -96,5 +100,14 @@ export interface Transaction {
   affiliate_id: string | null;
   affiliate_commission_amount: number | null;
   buyer_id: string | null;
+  created_at: string;
+}
+
+export interface Affiliation {
+  id: string;
+  product_id: string;
+  affiliate_id: string;
+  producer_id: string;
+  status: "pending" | "approved" | "rejected";
   created_at: string;
 }

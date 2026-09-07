@@ -35,6 +35,7 @@ create table if not exists public.products (
   status text not null default 'pending_review'
     check (status in ('pending_review', 'active', 'rejected')),
   rejection_reason text,
+  affiliate_enabled boolean not null default true,
   affiliate_commission_percent numeric(5,2) not null default 20.00
     check (affiliate_commission_percent >= 0 and affiliate_commission_percent <= 100),
   created_at timestamptz not null default now()
@@ -217,6 +218,57 @@ drop policy if exists "product_assets_authenticated_upload" on storage.objects;
 create policy "product_assets_authenticated_upload"
   on storage.objects for insert
   with check (bucket_id = 'product-assets' and auth.role() = 'authenticated');
+
+-- ------------------------------------------------------------
+-- 7. TABELA affiliations (Pedidos de Afiliação)
+-- ------------------------------------------------------------
+create table if not exists public.affiliations (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.products (id) on delete cascade,
+  affiliate_id uuid not null references public.profiles (id) on delete cascade,
+  producer_id uuid not null references public.profiles (id) on delete cascade,
+  status text not null default 'pending'
+    check (status in ('pending', 'approved', 'rejected')),
+  created_at timestamptz not null default now(),
+  unique(product_id, affiliate_id)
+);
+
+create index if not exists idx_affiliations_product on public.affiliations (product_id);
+create index if not exists idx_affiliations_affiliate on public.affiliations (affiliate_id);
+create index if not exists idx_affiliations_producer on public.affiliations (producer_id);
+
+alter table public.affiliations enable row level security;
+
+-- Afiliados podem ver as suas próprias afiliações
+drop policy if exists "affiliations_select_affiliate" on public.affiliations;
+create policy "affiliations_select_affiliate"
+  on public.affiliations for select
+  using (affiliate_id = auth.uid());
+
+-- Produtores podem ver as afiliações dos seus produtos
+drop policy if exists "affiliations_select_producer" on public.affiliations;
+create policy "affiliations_select_producer"
+  on public.affiliations for select
+  using (producer_id = auth.uid());
+
+-- Admin pode ver tudo
+drop policy if exists "affiliations_select_admin" on public.affiliations;
+create policy "affiliations_select_admin"
+  on public.affiliations for select
+  using (public.is_admin());
+
+-- Afiliados podem criar um pedido
+drop policy if exists "affiliations_insert_affiliate" on public.affiliations;
+create policy "affiliations_insert_affiliate"
+  on public.affiliations for insert
+  with check (affiliate_id = auth.uid());
+
+-- Produtores podem atualizar o status dos pedidos dos seus produtos
+drop policy if exists "affiliations_update_producer" on public.affiliations;
+create policy "affiliations_update_producer"
+  on public.affiliations for update
+  using (producer_id = auth.uid())
+  with check (producer_id = auth.uid());
 
 -- ============================================================
 -- FIM DO SCRIPT
