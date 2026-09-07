@@ -207,11 +207,13 @@ export default function Checkout() {
       <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
         {/* Coluna Esquerda — Produto */}
         <div>
-          <img
-            src={product.cover_image_url}
-            alt={product.title}
-            className="mb-6 aspect-[3/4] w-full rounded-xl object-cover shadow-glow"
-          />
+          <div className="mb-6 flex aspect-[3/4] w-full max-w-sm items-center justify-center overflow-hidden rounded-xl bg-black/30 p-4 shadow-glow md:mx-auto">
+            <img
+              src={product.cover_image_url}
+              alt={product.title}
+              className="h-full w-full rounded-lg object-contain"
+            />
+          </div>
           <h1 className="font-display text-2xl font-bold text-white">{product.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-white/60">{product.description}</p>
           <p className="mt-4 font-display text-3xl font-extrabold text-electric-soft">
