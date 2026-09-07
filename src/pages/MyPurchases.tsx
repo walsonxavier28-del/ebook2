@@ -75,7 +75,7 @@ export default function MyPurchases() {
               key={transaction.id}
               className="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]"
             >
-              <div className="flex aspect-[3/4] w-full items-center justify-center overflow-hidden bg-black/30 p-3">
+              <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-black/30 p-3 sm:aspect-[3/4]">
                 <img
                   src={product.cover_image_url}
                   alt={product.title}

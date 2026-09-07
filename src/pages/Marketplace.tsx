@@ -81,7 +81,7 @@ export default function Marketplace({ profile }: { profile: Profile | null }) {
               key={p.id}
               className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] transition hover:border-electric/30 hover:bg-white/[0.04]"
             >
-              <div className="aspect-[3/4] w-full overflow-hidden bg-black/40 p-3">
+              <div className="aspect-[4/3] w-full overflow-hidden bg-black/40 p-3 sm:aspect-[3/4]">
                 <img
                   src={p.cover_image_url}
                   alt={p.title}

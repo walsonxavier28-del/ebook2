@@ -4,6 +4,7 @@ import { LayoutDashboard, BookPlus, Library, ShieldCheck, Users, Users2, Wallet,
 interface SidebarProps {
   isAdmin: boolean;
   activeTab: string;
+  isOpen: boolean;
   onTabChange: (tab: string) => void;
 }
 
@@ -25,9 +26,9 @@ const adminTabs = [
   { id: "withdrawals", label: "Saques Pendentes", icon: Wallet },
 ];
 
-export default function Sidebar({ isAdmin, activeTab, onTabChange }: SidebarProps) {
+export default function Sidebar({ isAdmin, activeTab, isOpen, onTabChange }: SidebarProps) {
   return (
-    <aside className="w-full shrink-0 border-r border-white/5 bg-night-soft/60 md:w-64">
+    <aside className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 overflow-y-auto border-r border-white/5 bg-night-soft md:static md:block md:w-64 md:bg-night-soft/60 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} transition-transform duration-200`}>
       <nav className="flex flex-col gap-1 p-4">
         <p className="px-3 pb-2 pt-1 text-xs font-medium uppercase tracking-wide text-white/40">
           Menu Principal

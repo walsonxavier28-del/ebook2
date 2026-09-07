@@ -13,7 +13,7 @@ import Marketplace from "./pages/Marketplace";
 import ProfileSettings from "./pages/ProfileSettings";
 import MyPurchases from "./pages/MyPurchases";
 
-import { BookOpen, Smartphone, ShieldCheck, TrendingUp, ArrowRight, MessageCircle } from "lucide-react";
+import { BookOpen, Smartphone, ShieldCheck, TrendingUp, ArrowRight, MessageCircle, Menu, X } from "lucide-react";
 
 function Landing({ profile }: { profile: Profile | null }) {
   return (
@@ -200,6 +200,7 @@ function Landing({ profile }: { profile: Profile | null }) {
 
 function PainelRoute({ profile }: { profile: Profile | null }) {
   const [activeTab, setActiveTab] = useState("store");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!profile) return <Navigate to="/auth" replace />;
 
@@ -207,8 +208,32 @@ function PainelRoute({ profile }: { profile: Profile | null }) {
 
   return (
     <div className="flex min-h-[calc(100vh-73px)] flex-col md:flex-row">
-      <Sidebar isAdmin={isAdmin} activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="flex-1 p-6 md:p-10">
+      <button
+        type="button"
+        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+        onClick={() => setMenuOpen((open) => !open)}
+        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-electric text-white shadow-glow md:hidden"
+      >
+        {menuOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+        />
+      )}
+      <Sidebar
+        isAdmin={isAdmin}
+        activeTab={activeTab}
+        isOpen={menuOpen}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setMenuOpen(false);
+        }}
+      />
+      <main className="min-w-0 flex-1 p-4 sm:p-6 md:p-10">
         {["product-review", "accounts", "deposits", "withdrawals"].includes(activeTab) && isAdmin ? (
           <AdminDashboard activeTab={activeTab} profile={profile} />
         ) : activeTab === "store" ? (
